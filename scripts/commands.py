@@ -8,7 +8,7 @@ import speak
 from config import Config
 import ai_functions as ai
 from file_operations import read_file, write_to_file, append_to_file, delete_file, search_files
-from execute_code import execute_python_file
+from execute_code import execute_python_file, exec_shell
 from json_parser import fix_and_parse_json
 from image_gen import generate_image
 from duckduckgo_search import ddg
@@ -104,10 +104,8 @@ def execute_command(command_name, arguments):
             return ai.write_tests(arguments["code"], arguments.get("focus"))
         elif command_name == "execute_python_file":  # Add this command
             return execute_python_file(arguments["file"])
-        elif command_name == "generate_image":
-            return generate_image(arguments["prompt"])
-        elif command_name == "do_nothing":
-            return "No action performed."
+        elif command_name == "exec_shell":  # Add this command
+            return exec_shell(arguments["command_line"])
         elif command_name == "task_complete":
             shutdown()
         elif command_name == "execute_command":
