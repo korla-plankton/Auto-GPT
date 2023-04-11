@@ -2,8 +2,7 @@ import json
 import random
 import commands as cmd
 import utils
-from memory import get_memory, get_supported_memory_backends
-import data
+from memory import get_memory
 import chat
 from colorama import Fore, Style
 from spinner import Spinner
