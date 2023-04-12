@@ -6,12 +6,26 @@ from urllib.parse import urlparse, urljoin
 
 cfg = Config()
 
+
+# Function to check if the URL is valid
+def is_valid_url(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+# Function to sanitize the URL
+def sanitize_url(url):
+    return urljoin(url, urlparse(url).path)
+
+# Define and check for local file address prefixes
 def check_local_file_access(url):
     # Define and check for local file address prefixes
     local_prefixes = ['file:///', 'file://localhost', 'http://localhost', 'https://localhost']
     return any(url.startswith(prefix) for prefix in local_prefixes)
 
-def get_validated_response(url, headers=cfg.user_agent_header):
+def get_response(url, headers=cfg.user_agent_header, timeout=10):
     try:
         # Restrict access to local files
         if check_local_file_access(url):
@@ -21,9 +35,14 @@ def get_validated_response(url, headers=cfg.user_agent_header):
         if not url.startswith('http://') and not url.startswith('https://'):
             raise ValueError('Invalid URL format')
 
-        # Make the HTTP request and return the response
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception if the response contains an HTTP error status code
+        sanitized_url = sanitize_url(url)
+
+        response = requests.get(sanitized_url, headers=headers, timeout=timeout)
+
+        # Check if the response contains an HTTP error
+        if response.status_code >= 400:
+            return None, "Error: HTTP " + str(response.status_code) + " error"
+        
         return response, None
     except ValueError as ve:
         # Handle invalid URL format
@@ -35,22 +54,9 @@ def get_validated_response(url, headers=cfg.user_agent_header):
 
 def scrape_text(url):
     """Scrape text from a webpage"""
-    # Most basic check if the URL is valid:
-    if not url.startswith('http'):
-        return "Error: Invalid URL"
-    
-    # Restrict access to local files
-    if check_local_file_access(url):
-        return "Error: Access to local files is restricted"
-    
-    try:
-        response = requests.get(url, headers=cfg.user_agent_header)
-    except requests.exceptions.RequestException as e:
-        return "Error: " + str(e)
-
-    # Check if the response contains an HTTP error
-    if response.status_code >= 400:
-        return "Error: HTTP " + str(response.status_code) + " error"
+    response, error_message = get_response(url)
+    if error_message:
+        return error_message
 
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -83,13 +89,9 @@ def format_hyperlinks(hyperlinks):
 
 def scrape_links(url):
     """Scrape links from a webpage"""
-    response, error_message = get_validated_response(url)
+    response, error_message = get_response(url)
     if error_message:
         return error_message
-
-    # Check if the response contains an HTTP error
-    if response.status_code >= 400:
-        return "Error: HTTP " + str(response.status_code) + " error"
 
     soup = BeautifulSoup(response.text, "html.parser")
 
