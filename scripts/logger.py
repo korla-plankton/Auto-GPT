@@ -157,6 +157,7 @@ class TypingConsoleHandler(logging.StreamHandler):
         except Exception:
             self.handleError(record)
 
+
 class ConsoleHandler(logging.StreamHandler):
     def emit(self, record):
         msg = self.format(record)
