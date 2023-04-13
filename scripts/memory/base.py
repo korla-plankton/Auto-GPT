@@ -4,6 +4,7 @@ from config import AbstractSingleton
 from config import Config
 import openai
 
+cfg = Config()
 
 def get_ada_embedding(text):
     text = text.replace("\n", " ")
