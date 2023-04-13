@@ -50,8 +50,13 @@ class Config(metaclass=Singleton):
         self.execute_local_commands = os.getenv('EXECUTE_LOCAL_COMMANDS', 'False') == 'True'
 
         if self.use_azure:
-            self.load_azure_config()
-            openai.api_type = "azure"
+            self.openai_api_base = os.getenv("OPENAI_AZURE_API_BASE")
+            self.openai_api_version = os.getenv("OPENAI_AZURE_API_VERSION")
+            self.openai_deployment_id = os.getenv("OPENAI_AZURE_DEPLOYMENT_ID")
+            self.azure_chat_deployment_id = os.getenv("OPENAI_AZURE_CHAT_DEPLOYMENT_ID")
+            self.azure_embeddigs_deployment_id = os.getenv("OPENAI_AZURE_EMBEDDINGS_DEPLOYMENT_ID")
+            openai.api_type = os.getenv("OPENAI_API_TYPE", "azure")
+
             openai.api_base = self.openai_api_base
             openai.api_version = self.openai_api_version
 
