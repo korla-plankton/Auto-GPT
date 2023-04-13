@@ -332,36 +332,42 @@ def parse_arguments():
             cfg.memory_backend = chosen
 
 
-# TODO: fill in llm values here
-check_openai_api_key()
-cfg = Config()
-parse_arguments()
-logger.set_level(logging.DEBUG if cfg.debug_mode else logging.INFO)
-ai_name = ""
-prompt = construct_prompt()
-# print(prompt)
-# Initialize variables
-full_message_history = []
-result = None
-next_action_count = 0
-# Make a constant:
-user_input = "Determine which next command to use, and respond using the format specified above:"
+def main():
+    global ai_name, memory
+    # TODO: fill in llm values here
+    check_openai_api_key()
+    parse_arguments()
+    logger.set_level(logging.DEBUG if cfg.debug_mode else logging.INFO)
+    ai_name = ""
+    prompt = construct_prompt()
+    # print(prompt)
+    # Initialize variables
+    full_message_history = []
+    result = None
+    next_action_count = 0
+    # Make a constant:
+    user_input = "Determine which next command to use, and respond using the format specified above:"
+    # Initialize memory and make sure it is empty.
+    # this is particularly important for indexing and referencing pinecone memory
+    memory = get_memory(cfg, init=True)
+    print('Using memory of type: ' + memory.__class__.__name__)
+    # Interaction Loop
+    loop_count = 0
+    while True:
+         # Discontinue if continuous limit is reached
+        loop_count += 1
+        if cfg.continuous_mode and cfg.continuous_limit > 0 and loop_count > cfg.continuous_limit:
+            logger.typewriter_log("Continuous Limit Reached: ", Fore.RED, f"{cfg.continuous_limit}")
+            break
 
-# Initialize memory and make sure it is empty.
-# this is particularly important for indexing and referencing pinecone memory
-memory = get_memory(cfg, init=True)
-print('Using memory of type: ' + memory.__class__.__name__)
-
-# Interaction Loop
-while True:
-    # Send message to AI, get response
-    with Spinner("Thinking... "):
-        assistant_reply = chat.chat_with_ai(
-            prompt,
-            user_input,
-            full_message_history,
-            memory,
-            cfg.fast_token_limit) # TODO: This hardcodes the model to use GPT3.5. Make this an argument
+        # Send message to AI, get response
+        with Spinner("Thinking... "):
+            assistant_reply = chat.chat_with_ai(
+                prompt,
+                user_input,
+                full_message_history,
+                memory,
+                cfg.fast_token_limit)  # TODO: This hardcodes the model to use GPT3.5. Make this an argument
 
     # Print Assistant thoughts
     print_assistant_thoughts(assistant_reply)
