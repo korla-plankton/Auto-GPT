@@ -1,5 +1,6 @@
 import browse
 import json
+import subprocess
 from memory import get_memory
 import datetime
 import agent_manager as agents
@@ -109,6 +110,9 @@ def execute_command(command_name, arguments):
             return "No action performed."
         elif command_name == "task_complete":
             shutdown()
+        elif command_name == "execute_command":
+            result = subprocess.run(arguments["command"], shell=True, capture_output=True)
+            return f"```\n{result.stdout.decode()} {result.stderr.decode()}\n```"
         else:
             return f"Unknown command '{command_name}'. Please refer to the 'COMMANDS' list for available commands and only respond in the specified JSON format."
     # All errors, return "Error: + error message"
